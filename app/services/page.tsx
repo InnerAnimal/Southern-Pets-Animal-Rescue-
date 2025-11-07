@@ -1,6 +1,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { DonateSection } from '@/components/shared/DonateSection'
+import { DonateSection } from '../../components/shared/DonateSection'
 
 export default function ServicesPage() {
   const tnrSteps = [
@@ -20,7 +20,7 @@ export default function ServicesPage() {
       icon: '🏠',
       title: 'Return',
       description:
-        'Cats are returned to their familiar territory with a clipped ear to show they've been fixed.',
+        'Cats are returned to their familiar territory with a clipped ear to show they\'ve been fixed.',
     },
   ]
 

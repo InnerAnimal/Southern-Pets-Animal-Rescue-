@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { DonateSection } from '@/components/shared/DonateSection'
+import { DonateSection } from '../components/shared/DonateSection'
 
 export default function HomePage() {
   const benefits = [
@@ -20,7 +20,7 @@ export default function HomePage() {
       icon: '🤝',
       title: 'Ongoing Support',
       description:
-        'We provide guidance, resources, and support throughout your pet's life to ensure successful adoptions.',
+        'We provide guidance, resources, and support throughout your pet\'s life to ensure successful adoptions.',
     },
     {
       icon: '🏠',

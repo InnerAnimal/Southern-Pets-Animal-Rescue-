@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
-import { DonateSection } from '@/components/shared/DonateSection'
+import { DonateSection } from '../../components/shared/DonateSection'
 
 type Animal = {
   id: string
