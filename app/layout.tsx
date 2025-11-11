@@ -1,12 +1,9 @@
 import type { Metadata } from "next"
-import { Inter } from "next/font/google"
 import "./globals.css"
 import { Header } from "../components/layout/Header"
 import { Footer } from "../components/layout/Footer"
 import { ModalProvider } from "@/contexts/ModalContext"
 import ModalManager from "@/components/ModalManager"
-
-const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: "Southern Pets Animal Rescue | Every Animal Deserves a Loving Home | Acadia Parish",
@@ -33,7 +30,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body className="font-sans antialiased">
         <ModalProvider>
           <Header />
           <main>{children}</main>

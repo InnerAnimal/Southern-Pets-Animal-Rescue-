@@ -2,16 +2,27 @@ import { Resend } from 'resend';
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Initialize Resend lazily to avoid build-time errors
+let resend: Resend | null = null;
+const getResend = () => {
+  if (!resend && process.env.RESEND_API_KEY) {
+    resend = new Resend(process.env.RESEND_API_KEY);
+  }
+  return resend;
+};
 
 // ✅ CONFIRMED: Admin email for TNR request notifications
 const ADMIN_EMAIL = 'SouthernPetsAnimalRescue@gmail.com';
 const FROM_EMAIL = 'SPAR <noreply@southernpetsanimalrescue.org>'; // Verify domain in Resend dashboard
 
-// Supabase client for analytics logging
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
+// Supabase client for analytics logging (lazy)
+let supabase: any = null;
+const getSupabase = () => {
+  if (!supabase && process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+  }
+  return supabase;
+};
 
 export async function POST(request: Request) {
   let requestId: string | null = null;
@@ -153,14 +164,19 @@ export async function POST(request: Request) {
     `;
 
     // Send both emails
+    const resendClient = getResend();
+    if (!resendClient) {
+      throw new Error('Resend API key not configured');
+    }
+
     const [adminResult, userResult] = await Promise.all([
-      resend.emails.send({
+      resendClient.emails.send({
         from: FROM_EMAIL,
         to: ADMIN_EMAIL,
         subject: `New TNR Request from ${formData.requester_name}`,
         html: adminEmailHtml,
       }),
-      resend.emails.send({
+      resendClient.emails.send({
         from: FROM_EMAIL,
         to: formData.requester_email,
         subject: 'TNR Request Received - Southern Pets Animal Rescue',
@@ -181,18 +197,21 @@ export async function POST(request: Request) {
           user_email_error: userResult.error ? JSON.stringify(userResult.error) : null,
         };
 
-        if (analyticsId) {
-          // Update existing analytics entry
-          await supabase
-            .from('submission_analytics')
-            .update(updateData)
-            .eq('id', analyticsId);
-        } else if (requestId) {
-          // Update by request_id
-          await supabase
-            .from('submission_analytics')
-            .update(updateData)
-            .eq('request_id', requestId);
+        const supabaseClient = getSupabase();
+        if (supabaseClient) {
+          if (analyticsId) {
+            // Update existing analytics entry
+            await supabaseClient
+              .from('submission_analytics')
+              .update(updateData)
+              .eq('id', analyticsId);
+          } else if (requestId) {
+            // Update by request_id
+            await supabaseClient
+              .from('submission_analytics')
+              .update(updateData)
+              .eq('request_id', requestId);
+          }
         }
       } catch (analyticsError) {
         // Don't fail the request if analytics logging fails
@@ -237,21 +256,24 @@ export async function POST(request: Request) {
     // Log failure in analytics if we have the IDs
     if (requestId || analyticsId) {
       try {
-        const updateData: any = {
-          submission_status: 'failed',
-          submission_error: error instanceof Error ? error.message : 'Unknown error',
-        };
+        const supabaseClient = getSupabase();
+        if (supabaseClient) {
+          const updateData: any = {
+            submission_status: 'failed',
+            submission_error: error instanceof Error ? error.message : 'Unknown error',
+          };
 
-        if (analyticsId) {
-          await supabase
-            .from('submission_analytics')
-            .update(updateData)
-            .eq('id', analyticsId);
-        } else if (requestId) {
-          await supabase
-            .from('submission_analytics')
-            .update(updateData)
-            .eq('request_id', requestId);
+          if (analyticsId) {
+            await supabaseClient
+              .from('submission_analytics')
+              .update(updateData)
+              .eq('id', analyticsId);
+          } else if (requestId) {
+            await supabaseClient
+              .from('submission_analytics')
+              .update(updateData)
+              .eq('request_id', requestId);
+          }
         }
       } catch (analyticsError) {
         console.error('Analytics logging error:', analyticsError);

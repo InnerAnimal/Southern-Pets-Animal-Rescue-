@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '../../../../lib/db'
+import { supabase } from '../../../../lib/supabase'
 import { tnrRequestSchema } from '../../../../lib/validation/tnr-request'
 import { ZodError } from 'zod'
 
