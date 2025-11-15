@@ -1,9 +1,62 @@
+'use client'
+
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { DonateSection } from '../components/shared/DonateSection'
 import { TNRRequestButton, AdoptionButton, DonationButton } from '@/components/CTAButtons'
 
+interface Animal {
+  id: string
+  name: string
+  type: string
+  images?: { url: string; isPrimary: boolean }[]
+}
+
 export default function HomePage() {
+  const [featuredDog, setFeaturedDog] = useState<Animal | null>(null)
+  const [featuredCat, setFeaturedCat] = useState<Animal | null>(null)
+
+  useEffect(() => {
+    // Fetch featured animals from database
+    const fetchFeaturedAnimals = async () => {
+      try {
+        const response = await fetch('/api/animals?status=available')
+        if (response.ok) {
+          const data = await response.json()
+          const animals = data.animals || []
+
+          // Get first dog and first cat with images
+          const dog = animals.find((a: Animal) => a.type === 'dog' && a.images && a.images.length > 0)
+          const cat = animals.find((a: Animal) => a.type === 'cat' && a.images && a.images.length > 0)
+
+          setFeaturedDog(dog || null)
+          setFeaturedCat(cat || null)
+        }
+      } catch (error) {
+        console.log('Using fallback images')
+      }
+    }
+
+    fetchFeaturedAnimals()
+  }, [])
+
+  const getDogImage = () => {
+    if (featuredDog?.images && featuredDog.images.length > 0) {
+      const primaryImage = featuredDog.images.find(img => img.isPrimary)
+      return primaryImage?.url || featuredDog.images[0].url
+    }
+    return 'https://static.wixstatic.com/media/33e096_5f717f306d69438aaf07fa1528a6fb14~mv2.jpg'
+  }
+
+  const getCatImage = () => {
+    if (featuredCat?.images && featuredCat.images.length > 0) {
+      const primaryImage = featuredCat.images.find(img => img.isPrimary)
+      return primaryImage?.url || featuredCat.images[0].url
+    }
+    return 'https://static.wixstatic.com/media/33e096_56ccbd1b11574c49a55f07cf7c75c8b0~mv2.png'
+  }
+
   const benefits = [
     {
       icon: '💝',
@@ -57,15 +110,18 @@ export default function HomePage() {
             >
               <div className="relative w-full h-[340px] rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
                 <Image
-                  src="https://static.wixstatic.com/media/33e096_5f717f306d69438aaf07fa1528a6fb14~mv2.jpg"
-                  alt="Rescue Dogs Available for Adoption"
+                  src={getDogImage()}
+                  alt={featuredDog ? `${featuredDog.name} - Rescue Dog Available for Adoption` : 'Rescue Dogs Available for Adoption'}
                   fill
                   className="object-cover"
                   priority
+                  unoptimized={getDogImage().includes('r2.dev')}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/50 to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-8 text-white text-center">
-                  <div className="text-2xl font-bold mb-2">Meet Our Dogs</div>
+                  <div className="text-2xl font-bold mb-2">
+                    {featuredDog ? `Meet ${featuredDog.name}` : 'Meet Our Dogs'}
+                  </div>
                   <div className="text-base opacity-95">
                     View available dogs →
                   </div>
@@ -80,15 +136,18 @@ export default function HomePage() {
             >
               <div className="relative w-full h-[340px] rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
                 <Image
-                  src="https://static.wixstatic.com/media/33e096_56ccbd1b11574c49a55f07cf7c75c8b0~mv2.png"
-                  alt="Rescue Cats Available for Adoption"
+                  src={getCatImage()}
+                  alt={featuredCat ? `${featuredCat.name} - Rescue Cat Available for Adoption` : 'Rescue Cats Available for Adoption'}
                   fill
                   className="object-cover"
                   priority
+                  unoptimized={getCatImage().includes('r2.dev')}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/50 to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-8 text-white text-center">
-                  <div className="text-2xl font-bold mb-2">Meet Our Cats</div>
+                  <div className="text-2xl font-bold mb-2">
+                    {featuredCat ? `Meet ${featuredCat.name}` : 'Meet Our Cats'}
+                  </div>
                   <div className="text-base opacity-95">
                     View available cats →
                   </div>
