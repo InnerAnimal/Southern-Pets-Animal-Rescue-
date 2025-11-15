@@ -72,9 +72,6 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ['lucide-react', '@radix-ui/react-dialog'],
   },
-
-  // Turbopack configuration (Next.js 16 default)
-  turbopack: {},
 };
 
 export default nextConfig;
