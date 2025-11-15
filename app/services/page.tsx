@@ -1,9 +1,61 @@
+'use client'
+
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { DonateSection } from '../../components/shared/DonateSection'
 import { TNRRequestButton } from '@/components/CTAButtons'
 
+type AnimalImage = {
+  url: string
+  isPrimary: boolean
+}
+
+type Animal = {
+  id: string
+  name: string
+  type: string
+  images?: AnimalImage[]
+}
+
 export default function ServicesPage() {
+  const [catImages, setCatImages] = useState<string[]>([
+    'https://static.wixstatic.com/media/33e096_56ccbd1b11574c49a55f07cf7c75c8b0~mv2.png',
+    'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=300&h=360&fit=crop&crop=face',
+    'https://images.unsplash.com/photo-1592194996308-7b43878e84a6?w=300&h=360&fit=crop&crop=face',
+  ])
+
+  useEffect(() => {
+    const fetchCatImages = async () => {
+      try {
+        const response = await fetch('/api/animals?status=available')
+        if (response.ok) {
+          const data = await response.json()
+          const cats = (data.animals || []).filter((a: Animal) => a.type === 'cat')
+
+          const dynamicImages: string[] = []
+          for (const cat of cats) {
+            if (cat.images && cat.images.length > 0) {
+              const primaryImage = cat.images.find((img) => img.isPrimary)
+              dynamicImages.push(primaryImage?.url || cat.images[0].url)
+            }
+          }
+
+          if (dynamicImages.length > 0) {
+            setCatImages([
+              dynamicImages[0] || catImages[0],
+              dynamicImages[1] || catImages[1],
+              dynamicImages[2] || catImages[2],
+            ])
+          }
+        }
+      } catch (error) {
+        console.log('Using fallback cat images')
+      }
+    }
+    fetchCatImages()
+  }, [])
+
   const tnrSteps = [
     {
       icon: '🪤',
@@ -23,12 +75,6 @@ export default function ServicesPage() {
       description:
         'Cats are returned to their familiar territory with a clipped ear to show they\'ve been fixed.',
     },
-  ]
-
-  const catImages = [
-    'https://static.wixstatic.com/media/33e096_56ccbd1b11574c49a55f07cf7c75c8b0~mv2.png',
-    'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=300&h=360&fit=crop&crop=face',
-    'https://images.unsplash.com/photo-1592194996308-7b43878e84a6?w=300&h=360&fit=crop&crop=face',
   ]
 
   const packages = [
